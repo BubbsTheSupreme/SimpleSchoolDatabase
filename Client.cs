@@ -3,12 +3,12 @@ using System.Linq;
 
 namespace School
 {
-    public class Client
+    public static class Client
     {
         // check specific student status
-        public void CheckApplicantStatus(string email)
+        public static void CheckApplicantStatus(string email)
         {
-            using (var db = new School())
+            using (var db = new SchoolDbContext())
             {
                 var applicantStatus = db.Applicants
                     .Where(a => a.Email == email)
@@ -25,12 +25,12 @@ namespace School
         }
 
         // be able to apply to the school
-        public void Apply(int id, string firstName, string lastName, 
+        public static void Apply(int id, string firstName, string lastName, 
             string email, string gender, string major = "")
         { 
-            using (var db = new School())
+            using (var db = new SchoolDbContext())
             {
-                var applicant = new Applicant
+                var applicant = new Applicant()
                 {
                     ApplicantId = id,
                     FirstName = firstName,

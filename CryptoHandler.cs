@@ -4,9 +4,9 @@ using System.Security.Cryptography;
 
 namespace School 
 {
-    public class CryptoHandler
+    public static class CryptoHandler
     {
-        public string SaltAndHashPassword(string password)
+        public static string SaltAndHashPassword(string password)
         {
             var sha = SHA256.Create();
 
