@@ -1,23 +1,25 @@
 ﻿using System;
 using School;
-using System.Security.Cryptography;
-
-// -a [username] [password] for admin log in, but normal startup
-// [x] add methods for applying and checking results to client class
-// [x] in Applicant.cs change StudentId to ApplicantId
-// [ ] add string length checks to user input in Main()
-// [ ] add default admin to the SQL Script that creates the database
-// [x] add a view expulsion reason method (doesnt need to be in database style)
 
 namespace EFCoreProject
 {
     class Program
     {
+        static string SortBy()
+        {
+            Console.WriteLine("What column of data do you want to sort by? (enter number associated with value)");
+            Console.WriteLine(" 1) First name.");
+            Console.WriteLine(" 2) Last name.");
+            Console.WriteLine(" 3) Email.");
+            Console.WriteLine(" 4) Gender.");
+            Console.WriteLine(" 5) Major.");
+            Console.Write("> ");
+            string column = Console.ReadLine();
+            return column.ToLower();
+        }
         static void Main(string[] args) 
         {
-            var client = new Client();
             var admin = new Administrator();
-            var crypt = new CryptoHandler();
 
             if (args.Length == 0)
             {
@@ -30,7 +32,7 @@ namespace EFCoreProject
                     Console.WriteLine("Enter your e-mail that you applied with.");
                     Console.Write("> ");
                     response = Console.ReadLine();
-                    client.CheckApplicantStatus(response);
+                    Client.CheckApplicantStatus(response);
                 }
                 else if(response == "a")
                 {
@@ -61,7 +63,7 @@ namespace EFCoreProject
 
                     if (valueCheck == true && stringLengthCheck == true)
                     {
-                        client.Apply(0, firstName, lastName, email, gender.ToUpper(), major);
+                        Client.Apply(0, firstName, lastName, email, gender.ToUpper(), major);
                     }
                     else
                     {
@@ -80,7 +82,8 @@ namespace EFCoreProject
                     if (admin.CheckPassword(Int32.Parse(args[1]), args[2]) == true)
                     {
                         Console.WriteLine("Logged in!");
-                        while(true)
+                        bool loopCondition = true;
+                        while(loopCondition)
                         {
                             Console.WriteLine("What would you like to do?");
                             Console.WriteLine("  1) Add new admin");
@@ -98,99 +101,98 @@ namespace EFCoreProject
                             Console.WriteLine("   Q) to exit");
                             Console.Write("> ");
                             string response = Console.ReadLine();
-                            string name, password, firstName, lastName, email, gender, major, reason, id, column;
+                            string name, password, reason, id;
                             bool lengthCheck; // a boolean variable that will hold the comparison for each length for each method
                             int numericId;
                             switch(response)
                             {
                                 case "1":
-                                    Console.WriteLine("What is the name of the new admin? (15 character max length)");
-                                    Console.Write("> ");
-                                    name = Console.ReadLine();
-                                    Console.WriteLine("What is the password of the new admin?");
-                                    Console.Write("> ");
-                                    password = Console.ReadLine();
-                                    lengthCheck = name.Length <= 15 && password.Length <= 65;
-                                    var hashedPassword = crypt.SaltAndHashPassword(password);
-                                    if (lengthCheck == true)
+                                    while(true)
                                     {
-                                        admin.NewAdmin(0, name, hashedPassword);
-                                    }
-                                    else 
-                                    {
-                                        Console.WriteLine("One of the input's length is too long try again");
+                                        Console.WriteLine("What is the name of the new admin? (15 character max length)");
+                                        Console.Write("> ");
+                                        name = Console.ReadLine();
+                                        Console.WriteLine("What is the password of the new admin?");
+                                        Console.Write("> ");
+                                        password = Console.ReadLine();
+                                        lengthCheck = name.Length <= 15 && password.Length <= 65;
+                                        if(lengthCheck == true)
+                                        {
+                                            var hashedPassword = CryptoHandler.SaltAndHashPassword(password);
+                                            admin.NewAdmin(0, name, hashedPassword);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Input was invalid please try again.");
+                                            continue;
+                                        }
                                     }
                                     break;
                                 case "2":
-                                    Console.WriteLine("What is the students first name? (15 character max length)");
-                                    Console.Write("> ");
-                                    firstName = Console.ReadLine();
-                                    Console.WriteLine("What is the students last name? (20 character max length)");
-                                    Console.Write("> ");
-                                    lastName = Console.ReadLine(); 
-                                    Console.WriteLine("What is the students email? (35 character max length)");
-                                    Console.Write("> ");
-                                    email = Console.ReadLine();
-                                    Console.WriteLine("What is the gender of the student? (6 character max length)");
-                                    Console.Write("> ");
-                                    gender = Console.ReadLine();
-                                    Console.WriteLine("What is the reason for the expulsion? (500 character max length)");
-                                    Console.Write("> ");
-                                    reason = Console.ReadLine();
-                                    Console.WriteLine("What is the students major if they have one, if they dont then leave this blank. (20 character max length)");
-                                    Console.Write("> ");
-                                    major = Console.ReadLine();
-                                    lengthCheck = firstName.Length <= 15 && lastName.Length <= 20 && email.Length <= 35 && 
-                                        gender.Length <= 6 && reason.Length <= 500 && major.Length <= 20;
-                                    if (lengthCheck == true)
-                                    {
-                                        admin.ExpellStudent(0, firstName, lastName, email, gender, reason, major);
-                                    }
-                                    else 
-                                    {
-                                        Console.WriteLine("One of the input's length is too long try again");
+                                    while(true)
+                                    {    
+                                        Console.WriteLine("What is the ID of the student?");
+                                        Console.Write("> ");
+                                        id = Console.ReadLine();
+                                        Console.WriteLine("What is the reason of expulsion?");
+                                        Console.Write("> ");
+                                        reason = Console.ReadLine();
+                                        if (reason.Length <= 500 && int.TryParse(id, out numericId))
+                                        {
+                                            admin.ExpellStudent(numericId, reason);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            if(reason.Length > 500)
+                                            {
+                                                Console.WriteLine("Reason length too long, reason length is 500 characters, please try again..");
+                                            }
+                                            if(int.TryParse(id, out numericId) == false)
+                                            {
+                                                Console.WriteLine($"Sorry, {id} is not a number.. Try again..");
+                                            }
+                                            continue;
+                                        }
                                     }
                                     break;
                                 case "3":
-                                    Console.WriteLine("What is the students first name? (15 character max length)");
-                                    Console.Write("> ");
-                                    firstName = Console.ReadLine();
-                                    Console.WriteLine("What is the students last name? (20 character max length)");
-                                    Console.Write("> ");
-                                    lastName = Console.ReadLine();
-                                    Console.WriteLine("What is the students email? (35 character max length)");
-                                    Console.Write("> ");
-                                    email = Console.ReadLine();
-                                    Console.WriteLine("What is the gender of the student? (6 character max length)");
-                                    Console.Write("> ");
-                                    gender = Console.ReadLine();
-                                    Console.WriteLine("What is the students major if they have one, if they dont then leave this blank. (20 character max length)");
-                                    Console.Write("> ");
-                                    major = Console.ReadLine();
-                                    lengthCheck = firstName.Length <= 15 && lastName.Length <= 20 && email.Length <= 35 && 
-                                        gender.Length <= 6 && major.Length <= 20;
-                                    if (lengthCheck == true)
+                                    while(true)
                                     {
-                                        admin.AcceptApplicant(0, firstName, lastName, email, gender, major);
-                                    }
-                                    else 
-                                    {
-                                        Console.WriteLine("One of the input's length is too long try again");
+                                        Console.WriteLine("What is the ID of the applicant?");
+                                        Console.Write("> ");
+                                        id = Console.ReadLine();
+                                        if (int.TryParse(id, out numericId))
+                                        {
+                                            admin.AcceptApplicant(numericId);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"Sorry, {id} is not a number.. Try again..");
+                                            continue;
+                                        }
                                     }
                                     break;
                                 case "4":
-                                    Console.WriteLine("What is the student's ID?");
-                                    Console.Write("> ");
-                                    id = Console.ReadLine();
-                                    // checks if the id is numeric or not and if it is it gets 
-                                    // parsed as an in and assigned to the numericId variable
-                                    if (int.TryParse(id, out numericId))
+                                    while(true)
                                     {
-                                        admin.RejectApplicant(numericId);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"Sorry, {id} is not a number..");
+                                        Console.WriteLine("What is the student's ID?");
+                                        Console.Write("> ");
+                                        id = Console.ReadLine();
+                                        // checks if the id is numeric or not and if it is it gets 
+                                        // parsed as an in and assigned to the numericId variable
+                                        if (int.TryParse(id, out numericId))
+                                        {
+                                            admin.RejectApplicant(numericId);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"Sorry, {id} is not a number.. Try again..");
+                                            continue;
+                                        }
                                     }
                                     break;
                                 case "5":
@@ -219,15 +221,7 @@ namespace EFCoreProject
                                     }
                                     break;
                                 case "10":
-                                    Console.WriteLine("What column of data do you want to sort by? (enter number associated with value)");
-                                    Console.WriteLine(" 1) First name.");
-                                    Console.WriteLine(" 2) Last name.");
-                                    Console.WriteLine(" 3) Email.");
-                                    Console.WriteLine(" 4) Gender.");
-                                    Console.WriteLine(" 5) Major.");
-                                    Console.Write("> ");
-                                    column = Console.ReadLine();
-                                    switch(column)
+                                    switch(SortBy())
                                     {
                                         case "1":
                                             admin.ViewStudentsBy("firstname");
@@ -250,15 +244,7 @@ namespace EFCoreProject
                                     }
                                     break;
                                 case "11":
-                                    Console.WriteLine("What column of data do you want to sort by? (enter number associated with value)");
-                                    Console.WriteLine(" 1) First name.");
-                                    Console.WriteLine(" 2) Last name.");
-                                    Console.WriteLine(" 3) Email.");
-                                    Console.WriteLine(" 4) Gender.");
-                                    Console.WriteLine(" 5) Major.");
-                                    Console.Write("> ");
-                                    column = Console.ReadLine();
-                                    switch(column)
+                                    switch(SortBy())
                                     {
                                         case "1":
                                             admin.ViewApplicantsBy("firstname");
@@ -281,15 +267,7 @@ namespace EFCoreProject
                                     }
                                     break;
                                 case "12":
-                                    Console.WriteLine("What column of data do you want to sort by? (enter number associated with value)");
-                                    Console.WriteLine(" 1) First name.");
-                                    Console.WriteLine(" 2) Last name.");
-                                    Console.WriteLine(" 3) Email.");
-                                    Console.WriteLine(" 4) Gender.");
-                                    Console.WriteLine(" 5) Major.");
-                                    Console.Write("> ");
-                                    column = Console.ReadLine();
-                                    switch(column)
+                                    switch(SortBy())
                                     {
                                         case "1":
                                             admin.ViewExpelledStudentsBy("firstname");
@@ -313,7 +291,7 @@ namespace EFCoreProject
                                     break;
                                 case "q":
                                 case "Q":
-                                    Environment.Exit(0); //exits program if input is "q" or "Q"
+                                    loopCondition = false; //exits program if input is "q" or "Q"
                                     break;
                                 default:
                                     Console.WriteLine("Input invalid.. please try again");
